@@ -1,0 +1,3 @@
+"nice to have":
+- amount of rows in each table
+- size of DB on disk
