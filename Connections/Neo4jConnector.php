@@ -2,26 +2,33 @@
 
 namespace Connections;
 
+require('vendor/autoload.php');
+use Everyman\Neo4j;
+
 class Neo4jConnector
 {
 
     private static $instance = null;
-    private $db;
+    private $client;
+    private $dbName;
 
-    private function __construct($config)
+    private function __construct($neoConfig)
     {
+        try
+        {
+            $this->dbName = $neoConfig['dbname'];
+            $this->client = new Neo4j\Client($neoConfig['host'], $neoConfig['port']);
+            $this->client->getTransport()->setAuth($neoConfig['username'], $neoConfig['password']);
+            $this->client->getServerInfo(); // used to check connection
+        }
 
-
-        try {
-            self::$db = new PDO('mysql:host=' . $config['host'] . ';dbname=' . $config['dbname'], $config['username'], $config['password']);
-            self::$db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-            self::$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            self::$db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-
-        } catch (PDOException $e) {
+        catch (Neo4j\Exception $e)
+        {
             print "Error!: " . $e->getMessage() . "<br/>";
             die();
         }
+
+
     }
 
     private function __clone()
@@ -31,21 +38,25 @@ class Neo4jConnector
 //close database connection
     function __destruct()
     {
-        self::$stmt = null;
-        self::$db = null;
+
     }
 
 
-    public static function getInstance($config)
+    public static function getInstance($neoConfig = false)
     {
-        if (!self::$instance)
-            self::$instance = new self($config);
+        if (!self::$instance && $neoConfig != false)
+            self::$instance = new self($neoConfig);
 
         return self::$instance;
     }
 
-    public function getDB()
+    public function getClient()
     {
-        return $this->db;
+        return $this->client;
+    }
+
+    public function printServerInfo()
+    {
+        print_r($this->client->getServerInfo());
     }
 }

@@ -11,11 +11,11 @@ class MysqlConnector
     private $db;
     private $stmt;
 
-    private function __construct($config)
+    private function __construct($mysqlConfig)
     {
 
         try {
-            $this->db = new PDO('mysql:host=' . $config['host'] . ';dbname=' . $config['dbname'], $config['username'], $config['password']);
+            $this->db = new PDO('mysql:host=' . $mysqlConfig['host'] . ';dbname=' . $mysqlConfig['dbname'], $mysqlConfig['username'], $mysqlConfig['password']);
             $this->db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
             $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $this->db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
@@ -44,10 +44,10 @@ class MysqlConnector
     }
 
 
-    public static function getInstance($config = false)
+    public static function getInstance($mysqlConfig = false)
     {
-        if (!self::$instance && $config != false)
-            self::$instance = new self($config);
+        if (!self::$instance && $mysqlConfig != false)
+            self::$instance = new self($mysqlConfig);
 
         return self::$instance;
     }
