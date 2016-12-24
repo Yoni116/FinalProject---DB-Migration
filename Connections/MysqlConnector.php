@@ -100,10 +100,32 @@ class MysqlConnector
 
     }
 
-    public function getColData($colName, $tableName)
+//    public function getColData($colName, $tableName)
+//    {
+//        try {
+//            $query = ("SELECT " . $colName . " FROM " . $tableName);
+//            $this->stmt = $this->db->prepare($query);
+//
+//            if ($this->stmt->execute()) {
+//                $final_result['status'] = "OK";
+//                $final_result['data'] = $this->stmt->fetchAll();
+//                return $final_result;
+//            } else {
+//                $final_result['reason'] = "problem fetching data";
+//                return $final_result;
+//            }
+//        } catch (PDOException $e) {
+//            $this->stmt = null;
+//            $final_result['status'] = "EXCEPTION";
+//            $final_result['reason'] = $e->getMessage();
+//            return $final_result;
+//        }
+//    }
+
+    public function getTableData($tableName)
     {
         try {
-            $query = ("SELECT " . $colName . " FROM " . $tableName);
+            $query = ("SELECT * FROM " . $tableName);
             $this->stmt = $this->db->prepare($query);
 
             if ($this->stmt->execute()) {

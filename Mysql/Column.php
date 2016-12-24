@@ -1,6 +1,6 @@
 <?php
 namespace Mysql;
-require_once 'DataNode.php';
+
 /**
  * Created by IntelliJ IDEA.
  * User: yoni
@@ -20,7 +20,7 @@ class Column
     private $key;
     private $default;
     private $extra;
-    private $colData = array();
+
 
     /**
      * Column constructor.
@@ -41,21 +41,16 @@ class Column
         $this->key = $key;
         $this->default = $default;
         $this->extra = $extra;
-        $this->getColData();
     }
 
-
-    function getColData(){
-        $mysql = MysqlConnector::getInstance();
-
-        $result = $mysql->getColData($this->colName,$this->myTableName);
-        $rowNum = 0;
-        foreach($result['data'] as $data)
-        {
-            array_push($this->colData,new DataNode($rowNum++, $data));
-        }
-
+    /**
+     * @return mixed
+     */
+    public function getColName()
+    {
+        return $this->colName;
     }
+
 
 
 

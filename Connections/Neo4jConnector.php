@@ -28,7 +28,6 @@ class Neo4jConnector
             die();
         }
 
-
     }
 
     private function __clone()

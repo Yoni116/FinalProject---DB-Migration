@@ -19,7 +19,6 @@ class MysqlManager
 {
     public $dbName;
 
-
     private $tablesArray = array();
     private $mysql = null;
     /**
@@ -33,9 +32,17 @@ class MysqlManager
         $this->getTables();
     }
 
+    /**
+     * @return array
+     */
+    public function getTablesArray()
+    {
+        return $this->tablesArray;
+    }
+
+
+
     public function getTables(){
-
-
 
         $result = $this->mysql->getAllTables();
 //        $i=0;
@@ -64,6 +71,21 @@ class MysqlManager
             ConversionData::addForeignKey($source[0],$source[1],$dest[0],$dest[1]);
         }
 
+        ConversionData::analyzeKeys($this->getTablesNameArray());
+
     }
+
+    private function getTablesNameArray()
+    {
+        $nameArray = array();
+        foreach($this->tablesArray as $table)
+        {
+            array_push($nameArray,$table->getTableName());
+
+        }
+
+        return $nameArray;
+    }
+
 
 }

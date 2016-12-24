@@ -24,6 +24,7 @@ class Table
     private $tableName = "";
     private $numOfColumns = 0;
     private $columns = array();
+    private $rowsData = array();
 
 
 
@@ -31,9 +32,39 @@ class Table
     {
         $this->tableName = $name;
         $this->getColInfo();
+        $this->getTableData();
     }
 
-    function getColInfo(){
+    /**
+     * @return string
+     */
+    public function getTableName()
+    {
+        return $this->tableName;
+    }
+
+    /**
+     * @return array
+     */
+    public function getColumns()
+    {
+        return $this->columns;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRowsData()
+    {
+        return $this->rowsData;
+    }
+
+
+
+
+
+    function getColInfo()
+    {
         $mysql = MysqlConnector::getInstance();
 
         $result = $mysql->getTableInfo($this->tableName);
@@ -48,6 +79,16 @@ class Table
         }
 
 
+    }
+
+    function getTableData()
+    {
+        $mysql = MysqlConnector::getInstance();
+
+        $result = $mysql->getTableData($this->tableName);
+        //array_push($this->rowsData,$result['data']);
+        $this->rowsData = $result['data'];
+        //print_r($this->rowsData);
     }
 
     //function getTableRelationShip
