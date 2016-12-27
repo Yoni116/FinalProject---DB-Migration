@@ -20,6 +20,7 @@ class Column
     private $key;
     private $default;
     private $extra;
+    private $newType;
 
 
     /**
@@ -41,6 +42,7 @@ class Column
         $this->key = $key;
         $this->default = $default;
         $this->extra = $extra;
+        $this->newType = ConversionData::convertDataType($this->dataType);
     }
 
     /**
@@ -50,6 +52,23 @@ class Column
     {
         return $this->colName;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getDataType()
+    {
+        return $this->dataType;
+    }
+
+    /**
+     * @return string
+     */
+    public function getNewType()
+    {
+        return $this->newType;
+    }
+
 
 
 

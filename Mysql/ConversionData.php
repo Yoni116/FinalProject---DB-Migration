@@ -15,6 +15,8 @@ class ConversionData
     private static $uniqueKeyList = array();
     private static $tablesToNodes = array();
     private static $tablesToRelationship = array();
+    private static $keysToRelationship = array();
+    private static $refIdArray = array();
 
     public function __construct()
     {
@@ -29,13 +31,6 @@ class ConversionData
         return self::$primaryKeyList;
     }
 
-    /**
-     * @param array $primaryKeyList
-     */
-    public static function setPrimaryKeyList($primaryKeyList)
-    {
-        self::$primaryKeyList = $primaryKeyList;
-    }
 
     /**
      * @return array
@@ -46,12 +41,40 @@ class ConversionData
     }
 
     /**
-     * @param array $foreignKeyList
+     * @return array
      */
-    public static function setForeignKeyList($foreignKeyList)
+    public static function getTablesToRelationship()
     {
-        self::$foreignKeyList = $foreignKeyList;
+        return self::$tablesToRelationship;
     }
+
+    /**
+     * @return array
+     */
+    public static function getKeysToRelationship()
+    {
+        return self::$keysToRelationship;
+    }
+
+    /**
+     * @return array
+     */
+    public static function getRefIdArray()
+    {
+        return self::$refIdArray;
+    }
+
+    /**
+     * @return array
+     */
+    public static function getTablesToNodes()
+    {
+        return self::$tablesToNodes;
+    }
+
+
+
+
 
 
 
@@ -86,15 +109,20 @@ class ConversionData
 
     public static function convertDataType($dataType)
     {
-        if (strpos($dataType, 'char') !== false) {
+        if (strpos($dataType, 'char') !== false || strpos($dataType, 'text') !== false) {
            return "String";
         }
-        if (strpos($dataType, 'int') !== false) {
+        if (strpos($dataType, 'int') !== false || strpos($dataType, 'binary') !== false) {
             return "int";
         }
-        if (strpos($dataType, 'date') !== false) {
+        if (strpos($dataType, 'date') !== false || strpos($dataType, 'time') !== false) {
             return "long";
         }
+        if (strpos($dataType, 'double') !== false) {
+            return "long";
+        }
+
+        return "String";
 
     }
 
@@ -104,6 +132,8 @@ class ConversionData
 
 
         $first = array_pop($tmpArray);
+
+        $found = false;
 
         while($first != null) {
 
@@ -115,12 +145,16 @@ class ConversionData
                     unset($tmpArray[$i--]);
 
                     unset($tablesName[array_search($first['SourceTable'],$tablesName)]);
-
+                    $found = true;
                 }
                 $i++;
             }
+            if(!$found)
+                array_push(ConversionData::$keysToRelationship,array('SourceNode' => $first['SourceTable'],'DestNode' => $first['DestTable'],'SourceName' => $first['SourceColumn'], 'DestName' => $first['DestColumn'] , 'RelationshipName' => $first['DestTable']." To ".$first['SourceTable']));
 
             $first = array_pop($tmpArray);
+
+            $found = false;
 
         }
 
@@ -129,10 +163,33 @@ class ConversionData
             array_push(ConversionData::$tablesToNodes,$name);
         }
 
+    }
 
+    public static function addToRefArray($key,$value)
+    {
+        ConversionData::$refIdArray[$key][$value[0]]=$value[1];
+//        if (array_key_exists($key, ConversionData::$refIdArray))
+//        {
+//            ConversionData::$refIdArray[$key][$value[0]]=$value[1];
+//
+//        }
+//        else
+//        {
+//            //array_push(ConversionData::$refIdArray,($key => array($value)));
+//            ConversionData::$refIdArray[$key] = array($value[0] => $value[1]);
+//        }
+    }
 
+    public static function searchRefArray($key,$value)
+    {
+        $arr = array();
+        foreach(ConversionData::$refIdArray as $nodeId => $subArray)
+        {
+            if(array_key_exists($key,$subArray) && $subArray[$key] == $value)
+                array_push($arr,$nodeId);
+        }
 
-
+        return $arr;
 
     }
 

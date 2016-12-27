@@ -52,15 +52,31 @@ $mysql = MysqlConnector::getInstance($mysqlConfig);
 $neo4j = Neo4jConnector::getInstance($neoConfig);
 
 
-//$neo4j->printServerInfo();
 
 $mysqlDB = new MysqlManager($dbName);
 
+print_r(\Mysql\ConversionData::getTablesToRelationship());
+print_r(\Mysql\ConversionData::getKeysToRelationship());
+
 $neo4j = new NeoManager();
 
-$neo4j->createNodes($mysqlDB->getTablesArray()[0]);
 
-//$test->analyzeKeys($mysqlDB->getTablesArray());
+foreach($mysqlDB->getTablesArray() as $table)
+{
+    if(in_array($table->getTableName(),\Mysql\ConversionData::getTablesToNodes()))
+        $neo4j->createNodes($table);
+}
+
+$relationshipsArray = \Mysql\ConversionData::getKeysToRelationship();
+
+
+
+foreach($relationshipsArray as $relationshipInfo)
+{
+   $neo4j->createRelationship($relationshipInfo);
+}
+
+
 
 
 
