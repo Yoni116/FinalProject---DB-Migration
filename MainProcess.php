@@ -40,7 +40,7 @@ use Neo\NeoManager;
 
 
 
-static $dbName = 'employees';
+static $dbName = 'sakila';
 
 //$config = array('host' => 'kokoreko.ddns.net:8888/', 'dbname' => 'testDB', 'username' => 'test', 'password' => '');
 $mysqlConfig = array('host' => 'localhost', 'dbname' => $dbName, 'username' => 'testUser', 'password' => '');
@@ -55,12 +55,19 @@ $neo4j = Neo4jConnector::getInstance($neoConfig);
 
 $mysqlDB = new MysqlManager($dbName);
 
+print_r("PrimaryKeys List:");
+print_r(\Mysql\ConversionData::getPrimaryKeyList());
+print_r("ForeignKeys List:");
+print_r(\Mysql\ConversionData::getForeignKeyList());
+print_r("TablesToRelationship List:");
 print_r(\Mysql\ConversionData::getTablesToRelationship());
+print_r("KeysToRelationship List:");
 print_r(\Mysql\ConversionData::getKeysToRelationship());
 
 $neo4j = new NeoManager();
 
 
+// full working loops on all data
 foreach($mysqlDB->getTablesArray() as $table)
 {
     if(in_array($table->getTableName(),\Mysql\ConversionData::getTablesToNodes()))
@@ -69,11 +76,16 @@ foreach($mysqlDB->getTablesArray() as $table)
 
 $relationshipsArray = \Mysql\ConversionData::getKeysToRelationship();
 
-
-
 foreach($relationshipsArray as $relationshipInfo)
 {
    $neo4j->createRelationship($relationshipInfo);
+}
+
+$tableRelationshipsArray = \Mysql\ConversionData::getTablesToRelationship();
+
+foreach($tableRelationshipsArray as $relationshipInfo)
+{
+    $neo4j->createRelationship($relationshipInfo,$mysqlDB->getTableByName($relationshipInfo['RelationshipName']));
 }
 
 

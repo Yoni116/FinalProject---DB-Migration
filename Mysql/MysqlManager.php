@@ -87,5 +87,14 @@ class MysqlManager
         return $nameArray;
     }
 
+    public function getTableByName($name)
+    {
+        foreach($this->tablesArray as $table)
+        {
+            if($table->getTableName() == $name)
+                return $table;
+        }
+    }
+
 
 }

@@ -130,7 +130,7 @@ class ConversionData
     {
         $tmpArray = ConversionData::$foreignKeyList;
 
-
+        $priKeys = ConversionData::$primaryKeyList;
         $first = array_pop($tmpArray);
 
         $found = false;
@@ -141,11 +141,26 @@ class ConversionData
             foreach ($tmpArray as $keyEntry) {
                 if ($first['SourceTable'] == $keyEntry['SourceTable'])
                 {
-                    array_push(ConversionData::$tablesToRelationship,array('SourceNode' => $first['DestTable'],'DestNode' => $keyEntry['DestTable'],'SourceName' => $first['DestColumn'], 'DestName' => $keyEntry['DestColumn'] , 'RelationshipName' => $first['SourceTable']));
-                    unset($tmpArray[$i--]);
+                    $firstFound = false;
+                    $secondFound = false;
+                    foreach($priKeys as $priKeyInfo)
+                    {
+                        if($priKeyInfo['TableName'] == $first['SourceTable'])
+                        {
+                            if($first['SourceColumn'] == $priKeyInfo['ColumnName'])
+                                $firstFound = true;
+                            if($keyEntry['SourceColumn'] == $priKeyInfo['ColumnName'])
+                                $secondFound = true;
+                        }
+                    }
+                    if($firstFound && $secondFound)
+                    {
+                        array_push(ConversionData::$tablesToRelationship, array('SourceNode' => $first['DestTable'], 'DestNode' => $keyEntry['DestTable'], 'SourceName' => $first['DestColumn'], 'DestName' => $keyEntry['DestColumn'], 'RelationshipName' => $first['SourceTable'], 'SourceColumnSource' => $first['SourceColumn'] , 'DestColumnSource' => $keyEntry['SourceColumn'] ));
+                        unset($tmpArray[$i--]);
 
-                    unset($tablesName[array_search($first['SourceTable'],$tablesName)]);
-                    $found = true;
+                        unset($tablesName[array_search($first['SourceTable'], $tablesName)]);
+                        $found = true;
+                    }
                 }
                 $i++;
             }
@@ -168,16 +183,6 @@ class ConversionData
     public static function addToRefArray($key,$value)
     {
         ConversionData::$refIdArray[$key][$value[0]]=$value[1];
-//        if (array_key_exists($key, ConversionData::$refIdArray))
-//        {
-//            ConversionData::$refIdArray[$key][$value[0]]=$value[1];
-//
-//        }
-//        else
-//        {
-//            //array_push(ConversionData::$refIdArray,($key => array($value)));
-//            ConversionData::$refIdArray[$key] = array($value[0] => $value[1]);
-//        }
     }
 
     public static function searchRefArray($key,$value)

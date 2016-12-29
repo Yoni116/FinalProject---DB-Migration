@@ -17,42 +17,90 @@ require_once __DIR__.'/../Mysql/ConversionData.php';
  */
 class NeoManager
 {
+    public function createRelationshipFromTable($relationInfo, $table)
+    {
+        $neoClient = Neo4jConnector::getInstance()->getClient();
+
+        $cols = $table->getColumns();
+
+        foreach($cols as $colKey => $colData) {
+            if($colData->getColName() == $relationInfo['SourceColumnSource'] || $colData->getColName() == $relationInfo['DestColumnSource'] )
+                unset($cols[$colKey]);
+        }
+
+
+        $data = $table->getRowsData();
+
+        foreach ($data as $row)
+        {
+
+            $firstId = ConversionData::searchRefArray($relationInfo['SourceNode'] . $relationInfo['SourceName'], $row[$relationInfo['SourceColumnSource']]);
+            $secondId = ConversionData::searchRefArray($relationInfo['DestNode'] . $relationInfo['DestName'], $row[$relationInfo['DestColumnSource']]);
+            $firstNode = $neoClient->getNode($firstId[0]);
+            $secondNode = $neoClient->getNode($secondId[0]);
+
+            $relation = $firstNode->relateTo($secondNode, $relationInfo['RelationshipName']);
+
+            foreach($cols as $colKey => $colData)
+            {
+                    switch ($colData->getNewType())
+                    {
+                        case "int":
+                            $propData = intval($row[$colData->getColName()]);
+                            break;
+                        case "long":
+                            $propData = floatval(strtotime($row[$colData->getColName()]));
+                            break;
+                        case "String":
+                            $propData = $row[$colData->getColName()];
+                            break;
+
+                    }
+
+                    $relation->setProperty($colData->getColName(), $propData);
+            }
+
+            $relation->save();
+        }
+
+        $time = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+        echo "after creating relationship " . $relationInfo['RelationshipName'] . " Process Time: {$time} \n";
+
+    }
+
 
 
     public function createRelationship($relationInfo)
     {
-        $refKeysArray = ConversionData::getRefIdArray();
 
         $neoClient = Neo4jConnector::getInstance()->getClient();
 
         $nodeList = $neoClient->makeLabel($relationInfo['SourceNode'])->getNodes();
 
 
-
-        foreach($nodeList as $firstNode)
+        foreach ($nodeList as $firstNode)
         {
             $firstNodeId = $firstNode->getId();
             $keyPropertyValue = $firstNode->getProperty($relationInfo['SourceName']);
-            $keysFound = ConversionData::searchRefArray($relationInfo['DestNode'].$relationInfo['DestName'],$keyPropertyValue);
 
-            if(($firstId = array_search($firstNodeId, $keysFound)) !== false) { // remove the first node from the found keys
+
+            $keysFound = ConversionData::searchRefArray($relationInfo['DestNode'] . $relationInfo['DestName'], $keyPropertyValue);
+
+            if (($firstId = array_search($firstNodeId, $keysFound)) !== false)
+            { // remove the first node from the found keys
                 unset($keysFound[$firstId]);
             }
 
-            foreach($keysFound as $key)
+            foreach ($keysFound as $key)
             {
                 $secondNode = $neoClient->getNode($key);
-                $firstNode->relateTo($secondNode,$relationInfo['RelationshipName'])->save();
+                $firstNode->relateTo($secondNode, $relationInfo['RelationshipName'])->save();
+                }
 
             }
 
-        }
-
-        $time = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
-        echo "after creating relationship ". $relationInfo['RelationshipName']. " Process Time: {$time} \n";
-
-
-
+            $time = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+            echo "after creating relationship " . $relationInfo['RelationshipName'] . " Process Time: {$time} \n";
 
     }
 
@@ -96,18 +144,7 @@ class NeoManager
             }
         }
 
-//        $colsType = array();
-
-//        for($i = 0; $i < $numberOfCols; $i++)
-//        {
-//            $type = ConversionData::convertDataType($cols[$i]->getDataType());
-//            $name = $cols[$i]->getColName();
-//
-//            array_push($colsType,array('Name' => $name, 'Type' => $type));
-//        }
-
         $data = $table->getRowsData();
-        //$tmpNodes = array();
 
         //$neoClient->startBatch();
         foreach($data as $row)
@@ -115,9 +152,6 @@ class NeoManager
             $node = $neoClient->makeNode();
             for($i = 0; $i < $numberOfCols; $i++)
             {
-//                $propName = $cols[$i]->getColName();
-//
-//                $type = ConversionData::convertDataType($cols[$i]->getDataType());
 
                 switch($cols[$i]->getNewType())
                 {
@@ -148,25 +182,9 @@ class NeoManager
                     ConversionData::addToRefArray($node->getId(), array($table->getTableName().$cols[$i]->getColName(),$row[$cols[$i]->getColName()]));
             }
 
-          //  print_r(ConversionData::getRefIdArray());
-
-            //array_push($tmpNodes,$node);
             $node->addLabels(array($label));
 
-
-
-            //$node->setProperty()
         }
-
-//        $answer = $neoClient->commitBatch();
-//
-//        if($answer)
-//        {
-//            foreach ($tmpNodes as $node)
-//            {
-//                $node->addLabels(array($label));
-//            }
-//        }
 
         $time = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
         echo "after creating nodes {$table->getTableName()} Process Time: {$time} \n";
