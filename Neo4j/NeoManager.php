@@ -81,7 +81,7 @@ class NeoManager
         foreach ($nodeList as $firstNode)
         {
             $firstNodeId = $firstNode->getId();
-            $keyPropertyValue = $firstNode->getProperty($relationInfo['SourceName']);
+            $keyPropertyValue = ConversionData::searchRefArrayById($firstNodeId,$relationInfo['SourceNode'] . $relationInfo['SourceName']);
 
 
             $keysFound = ConversionData::searchRefArray($relationInfo['DestNode'] . $relationInfo['DestName'], $keyPropertyValue);
@@ -104,7 +104,7 @@ class NeoManager
 
     }
 
-// TODO added error handling
+
     public function createNodes($table)
     {
         $neoClient = Neo4jConnector::getInstance()->getClient();
@@ -113,7 +113,7 @@ class NeoManager
 
         $cols = $table->getColumns();
 
-        $numberOfCols = count($cols);
+
 
         $tempArray = ConversionData::getKeysToRelationship();
         $arrayOfColToRef = array();
@@ -144,30 +144,40 @@ class NeoManager
             }
         }
 
+        $colsRefArray = array();
+        foreach($cols as $colKey => $colData) {
+            if(array_search($colData->getColName(),$arrayOfColToRef) !== false )
+            {
+                array_push($colsRefArray,$colData);
+                unset($cols[$colKey]);
+            }
+        }
+
+
         $data = $table->getRowsData();
 
         //$neoClient->startBatch();
         foreach($data as $row)
         {
             $node = $neoClient->makeNode();
-            for($i = 0; $i < $numberOfCols; $i++)
+            foreach($cols as $colKey => $colData)
             {
 
-                switch($cols[$i]->getNewType())
+                switch($colData->getNewType())
                 {
                     case "int":
-                        $propData = intval($row[$cols[$i]->getColName()]);
+                        $propData = intval($row[$colData->getColName()]);
                         break;
                     case "long":
-                        $propData = floatval(strtotime($row[$cols[$i]->getColName()]));
+                        $propData = floatval(strtotime($row[$colData->getColName()]));
                         break;
                     case "String":
-                        $propData = $row[$cols[$i]->getColName()];
+                        $propData = $row[$colData->getColName()];
                         break;
 
                 }
 
-                $node->setProperty($cols[$i]->getColName(),$propData);
+                $node->setProperty($colData->getColName(),$propData);
 
 
             }
@@ -175,11 +185,9 @@ class NeoManager
 
 
 
-            for($i = 0; $i < $numberOfCols; $i++)
+            foreach($colsRefArray as $colKey => $colData)
             {
-                $found = array_search($cols[$i]->getColName(),$arrayOfColToRef);
-                if($found !== false )
-                    ConversionData::addToRefArray($node->getId(), array($table->getTableName().$cols[$i]->getColName(),$row[$cols[$i]->getColName()]));
+                ConversionData::addToRefArray($table->getTableName().$colData->getColName(),$node->getId(), $row[$colData->getColName()]);
             }
 
             $node->addLabels(array($label));

@@ -4,13 +4,21 @@ namespace Connections;
 
 use \PDO;
 
+/**
+ * Class MysqlConnector
+ * @package Connections
+ */
 class MysqlConnector
 {
 
-    private static $instance = null;
-    private $db;
-    private $stmt;
+    private static $instance = null; // the main instance for the connection used for singleton
+    private $db; // the db connection object it self
+    private $stmt; // used in class in order to execute the queries
 
+    /**
+     * @param $mysqlConfig [connection info: host, db name, username , password]
+     * creates instance for connection
+     */
     private function __construct($mysqlConfig)
     {
 
@@ -26,24 +34,20 @@ class MysqlConnector
         }
     }
 
-    public function __clone()
+    /**
+     * @return bool
+     * always false - singleton
+     */
+    private function __clone()
     {
         return false;
     }
 
-    public function __wakeup()
-    {
-        return false;
-    }
-
-//close database connection
-    function __destruct()
-    {
-        $this->stmt = null;
-        $this->db = null;
-    }
-
-
+    /**
+     * @param bool|false $mysqlConfig
+     * @return MysqlConnector
+     * get the singleton instance of connection
+     */
     public static function getInstance($mysqlConfig = false)
     {
         if (!self::$instance && $mysqlConfig != false)
@@ -52,7 +56,10 @@ class MysqlConnector
         return self::$instance;
     }
 
-
+    /**
+     * @return mixed
+     * DB query to return all table names in DB
+     */
     public function getAllTables()
     {
         try {
@@ -77,6 +84,11 @@ class MysqlConnector
         }
     }
 
+    /**
+     * @param $tableName
+     * @return mixed
+     * DB query to get table description and all keys for table
+     */
     public function getTableInfo($tableName)
     {
         try {
@@ -100,28 +112,11 @@ class MysqlConnector
 
     }
 
-//    public function getColData($colName, $tableName)
-//    {
-//        try {
-//            $query = ("SELECT " . $colName . " FROM " . $tableName);
-//            $this->stmt = $this->db->prepare($query);
-//
-//            if ($this->stmt->execute()) {
-//                $final_result['status'] = "OK";
-//                $final_result['data'] = $this->stmt->fetchAll();
-//                return $final_result;
-//            } else {
-//                $final_result['reason'] = "problem fetching data";
-//                return $final_result;
-//            }
-//        } catch (PDOException $e) {
-//            $this->stmt = null;
-//            $final_result['status'] = "EXCEPTION";
-//            $final_result['reason'] = $e->getMessage();
-//            return $final_result;
-//        }
-//    }
-
+    /**
+     * @param $tableName
+     * @return mixed
+     * DB query to get all the raw data of table
+     */
     public function getTableData($tableName)
     {
         try {
@@ -144,6 +139,11 @@ class MysqlConnector
         }
     }
 
+    /**
+     * @param $dbName
+     * @return mixed
+     * DB query to get all foreign key connections in DB
+     */
     public function getForeignKey($dbName)
     {
         try {
@@ -175,5 +175,43 @@ class MysqlConnector
 
 
     }
+
+
+    //    public function getColData($colName, $tableName)
+//    {
+//        try {
+//            $query = ("SELECT " . $colName . " FROM " . $tableName);
+//            $this->stmt = $this->db->prepare($query);
+//
+//            if ($this->stmt->execute()) {
+//                $final_result['status'] = "OK";
+//                $final_result['data'] = $this->stmt->fetchAll();
+//                return $final_result;
+//            } else {
+//                $final_result['reason'] = "problem fetching data";
+//                return $final_result;
+//            }
+//        } catch (PDOException $e) {
+//            $this->stmt = null;
+//            $final_result['status'] = "EXCEPTION";
+//            $final_result['reason'] = $e->getMessage();
+//            return $final_result;
+//        }
+//    }
+
+    /**
+     * @return bool
+     */
+    public function __wakeup()
+    {
+        return false;
+    }
+
+    function __destruct()
+    {
+        $this->stmt = null;
+        $this->db = null;
+    }
 }
+
 

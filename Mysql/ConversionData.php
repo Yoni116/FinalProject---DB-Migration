@@ -165,7 +165,7 @@ class ConversionData
                 $i++;
             }
             if(!$found)
-                array_push(ConversionData::$keysToRelationship,array('SourceNode' => $first['SourceTable'],'DestNode' => $first['DestTable'],'SourceName' => $first['SourceColumn'], 'DestName' => $first['DestColumn'] , 'RelationshipName' => $first['DestTable']." To ".$first['SourceTable']));
+                array_push(ConversionData::$keysToRelationship,array('SourceNode' => $first['SourceTable'],'DestNode' => $first['DestTable'],'SourceName' => $first['SourceColumn'], 'DestName' => $first['DestColumn'] , 'RelationshipName' => $first['SourceTable']." To ".$first['DestTable']));
 
             $first = array_pop($tmpArray);
 
@@ -180,21 +180,27 @@ class ConversionData
 
     }
 
-    public static function addToRefArray($key,$value)
+    public static function addToRefArray($fkey,$key,$value)
     {
-        ConversionData::$refIdArray[$key][$value[0]]=$value[1];
+        ConversionData::$refIdArray[$fkey][$key]=$value;
     }
 
-    public static function searchRefArray($key,$value)
+    public static function searchRefArray($fkey,$value)
     {
         $arr = array();
-        foreach(ConversionData::$refIdArray as $nodeId => $subArray)
+
+        foreach(ConversionData::$refIdArray[$fkey] as $nodeId => $arrValue)
         {
-            if(array_key_exists($key,$subArray) && $subArray[$key] == $value)
+            //if(array_key_exists($fkey,$subArray) && $subArray[$fkey] == $value)
+            if($arrValue == $value)
                 array_push($arr,$nodeId);
         }
 
         return $arr;
+    }
+    public static function searchRefArrayById($id,$fkey)
+    {
+        return ConversionData::$refIdArray[$fkey][$id];
 
     }
 

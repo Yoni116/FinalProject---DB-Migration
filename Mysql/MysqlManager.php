@@ -41,7 +41,6 @@ class MysqlManager
     }
 
 
-
     public function getTables(){
 
         $result = $this->mysql->getAllTables();

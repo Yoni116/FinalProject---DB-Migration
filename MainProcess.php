@@ -30,6 +30,40 @@ require_once 'Neo4j\NeoManager.php';
 // *** after some tweaking :
 // 2gb memory and 16 secs to pull data
 
+///////////////////// sakila DB ////////////
+// Last runtime : 2 hours
+// size of DB on neo4j = 7.4 MB
+// Nodes = 40811
+// Properties = 78944
+// Relationships = 115307
+
+// Last runtime : 2:10 hours
+// size of DB on neo4j = 6.4 MB
+// Nodes = 40811
+// Properties = 52515
+// Relationships = 115307
+
+// Last runtime : 20 Minutes
+// size of DB on neo4j = 6.4 MB
+// Nodes = 40811
+// Properties = 52371
+// Relationships = 116307
+
+///////////////////// controly DB ////////////
+// Last runtime : 45 Seconds
+// size of DB on neo4j = less then 100 KB
+// Nodes = 2811
+// Properties = 4980
+// Relationships = 1475
+
+///////////////////// world DB ////////////
+// Last runtime : 2 Minutes
+// size of DB on neo4j = around 100 KB
+// Nodes = 5302
+// Properties = 9438
+// Relationships = 5063
+
+
 
 
 use Connections\MysqlConnector;
@@ -64,8 +98,15 @@ print_r(\Mysql\ConversionData::getTablesToRelationship());
 print_r("KeysToRelationship List:");
 print_r(\Mysql\ConversionData::getKeysToRelationship());
 
+$time = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+echo "after scanning schema Process Time: {$time} \n";
+
 $neo4j = new NeoManager();
 
+//$neo4j->createNodes($mysqlDB->getTablesArray()[14]);
+//$neo4j->createNodes($mysqlDB->getTablesArray()[15]);
+//
+//$neo4j->createRelationship(\Mysql\ConversionData::getKeysToRelationship()[0]);
 
 // full working loops on all data
 foreach($mysqlDB->getTablesArray() as $table)
@@ -85,11 +126,8 @@ $tableRelationshipsArray = \Mysql\ConversionData::getTablesToRelationship();
 
 foreach($tableRelationshipsArray as $relationshipInfo)
 {
-    $neo4j->createRelationship($relationshipInfo,$mysqlDB->getTableByName($relationshipInfo['RelationshipName']));
+    $neo4j->createRelationshipFromTable($relationshipInfo,$mysqlDB->getTableByName($relationshipInfo['RelationshipName']));
 }
-
-
-
 
 
 $time = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
